@@ -6,16 +6,6 @@
 #include <Servo.h>
 #include <LiquidCrystal.h>
 
-// Initialize lcd
-LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
-
-// Declare Servos
-// Servo rightLever;
-Servo leftEng;
-Servo rightEng;
-Servo leftShift;
-Servo rightShift;
-
 // Define Servo Pins
 // #define leftLevPin
 // #define rightLevPin
@@ -32,12 +22,12 @@ Servo rightShift;
 #define leftThrotCent 512
 #define leftThrotMin 0
 
-// Define Button Pins
+// // Define Button Pins
 // #define dockButPin
 // #define syncButPin
 // #define shiftButPin
 
-// Define LED Pins
+// // Define LED Pins
 // #define dockLEDPin
 // #define syncLEDPin
 // #define shiftLEDPin
@@ -65,6 +55,16 @@ Servo rightShift;
 #define rightRev 45
 #define rightNeut 90
 #define rightAhead 135
+
+// Initialize lcd
+LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
+
+// Declare Servos
+// Servo rightLever;
+Servo leftEng;
+Servo rightEng;
+Servo leftShift;
+Servo rightShift;
 
 int leftEngNeut = 0;
 int rightEngNeut = 0;
@@ -144,6 +144,8 @@ void setup()
     lcd.setCursor(0, 2);
     lcd.print("    To Continue...");
   }
+  leftEngNeut = 1;
+  rightEngNeut = 1;
 
   delay(1000);
   lcd.clear();
@@ -166,7 +168,6 @@ void setup()
 
 void loop()
 {
-
   // Left Throttle Control
 
   int leftThrotPos = analogRead(leftThrotPin);
@@ -177,12 +178,12 @@ void loop()
   if (leftEngNeut == 0 && leftThrotPos > 517)
   {
     leftEng.write(leftEngPosF);
-    leftShift.write(leftAhead);
+    leftShift.write(leftRev);
   }
   else if (leftEngNeut == 0 && leftThrotPos < 506)
   {
     leftEng.write(leftEngPosR);
-    leftShift.write(leftRev);
+    leftShift.write(leftAhead);
   }
   else
   {
@@ -193,7 +194,7 @@ void loop()
     }
     else
     {
-      if (leftThrotPos < 519 && leftThrotPos > 504)
+      if (leftThrotPos > 519 && leftThrotPos < 504)
         leftEngNeut = 0;
     }
   }
@@ -211,17 +212,29 @@ void loop()
   int rightEngPosF = map(rightThrotPos, 512, 1023, 180, 0);
   int rightEngPosR = map(rightThrotPos, 511, 0, 180, 0);
 
-  if (rightThrotPos > 511)
-    rightEng.write(rightEngPosF);
-  else
-    rightEng.write(rightEngPosR);
-
-  if (rightThrotPos > 511)
+  if (rightEngNeut == 0 && rightThrotPos > 517)
   {
-    rightShift.write(rightRev);
+    leftEng.write(rightEngPosF);
+    leftShift.write(rightRev);
+  }
+  else if (rightEngNeut == 0 && rightThrotPos < 506)
+  {
+    leftEng.write(rightEngPosR);
+    leftShift.write(rightAhead);
   }
   else
-    rightShift.write(rightAhead);
+  {
+    if (rightEngNeut == 0)
+    {
+      leftEng.write(rightNeut);
+      rightEngNeut = 1;
+    }
+    else
+    {
+      if (rightThrotPos > 519 && rightThrotPos < 504)
+        rightEngNeut = 0;
+    }
+  }
 
   int rightEngRead = rightEng.read();
   int rightthrot = map(rightEngRead, 180, 0, 0, 100);
