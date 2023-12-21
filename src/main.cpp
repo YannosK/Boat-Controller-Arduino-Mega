@@ -75,13 +75,13 @@ void setup()
   // pinMode(dockButPin, INPUT_PULLUP);
   // pinMode(syncButPin, INPUT_PULLUP);
   // pinMode(shiftButPin, INPUT_PULLUP);
-  // pinMode(engRun, INPUT_PULLUP);
+  pinMode(engRun, INPUT_PULLUP);
 
   // // Define Output Pins
   // pinMode(dockLEDPin, OUTPUT);
   // pinMode(syncLEDPin, OUTPUT);
   // pinMode(shiftLEDPin, OUTPUT);
-  // pinMode(ignRelPin, OUTPUT);
+  pinMode(ignRelPin, OUTPUT);
   digitalWrite(ignRelPin, HIGH);
 
   // Initialize Devices
@@ -119,8 +119,8 @@ void setup()
   delay(1000);
 
   // Check if the engine is running
-  // int engineRun = digitalRead(engRun);
-  while (!(digitalRead(engRun)))
+  int engineRun = digitalRead(engRun);
+  while (engineRun == LOW)
   {
     lcd.setCursor(0, 0);
     lcd.print(" ENGINE IS RUNNING!");
@@ -144,8 +144,8 @@ void setup()
     lcd.setCursor(0, 2);
     lcd.print("    To Continue...");
   }
-  leftEngNeut = 1;
-  rightEngNeut = 1;
+  // leftEngNeut = 1;
+  // rightEngNeut = 1;
 
   delay(1000);
   lcd.clear();
@@ -171,33 +171,31 @@ void loop()
   // Left Throttle Control
 
   int leftThrotPos = analogRead(leftThrotPin);
-  int leftEngPosF = map(leftThrotPos, 517, 1023, 180, 0);
-  int leftEngPosR = map(leftThrotPos, 506, 0, 180, 0);
-  // int leftEngPosN = map(leftThrotPos, )
+  int leftEngPosF = map(leftThrotPos, 512, 1023, 180, 0);
+  int leftEngPosR = map(leftThrotPos, 511, 0, 180, 0);
 
-  if (leftEngNeut == 0 && leftThrotPos > 517)
+  if (leftEngNeut == 0)
   {
-    leftEng.write(leftEngPosF);
-    leftShift.write(leftRev);
-  }
-  else if (leftEngNeut == 0 && leftThrotPos < 506)
-  {
-    leftEng.write(leftEngPosR);
-    leftShift.write(leftAhead);
-  }
-  else
-  {
-    if (leftEngNeut == 0)
-    {
-      leftEng.write(leftNeut);
-      leftEngNeut = 1;
-    }
+    if (leftThrotPos > 560)
+      leftShift.write(leftRev);
+    else if (leftThrotPos < 470)
+      leftShift.write(leftAhead);
     else
     {
-      if (leftThrotPos > 519 && leftThrotPos < 504)
-        leftEngNeut = 0;
+      leftShift.write(leftNeut);
+      leftEngNeut = 1;
     }
   }
+  else if (leftEngNeut == 1)
+  {
+    if (leftThrotPos > 620 || leftThrotPos < 410)
+      leftEngNeut = 0;
+  }
+
+  if (leftThrotPos > 512)
+    leftEng.write(leftEngPosF);
+  else
+    leftEng.write(leftEngPosR);
 
   int leftEngRead = leftEng.read();
   int leftthrot = map(leftEngRead, 180, 0, 0, 100);
@@ -212,34 +210,33 @@ void loop()
   int rightEngPosF = map(rightThrotPos, 512, 1023, 180, 0);
   int rightEngPosR = map(rightThrotPos, 511, 0, 180, 0);
 
-  if (rightEngNeut == 0 && rightThrotPos > 517)
+  if (rightEngNeut == 0)
   {
-    leftEng.write(rightEngPosF);
-    leftShift.write(rightRev);
-  }
-  else if (rightEngNeut == 0 && rightThrotPos < 506)
-  {
-    leftEng.write(rightEngPosR);
-    leftShift.write(rightAhead);
-  }
-  else
-  {
-    if (rightEngNeut == 0)
-    {
-      leftEng.write(rightNeut);
-      rightEngNeut = 1;
-    }
+    if (rightThrotPos > 560)
+      rightShift.write(rightRev);
+    else if (rightThrotPos < 470)
+      rightShift.write(rightAhead);
     else
     {
-      if (rightThrotPos > 519 && rightThrotPos < 504)
-        rightEngNeut = 0;
+      rightShift.write(rightNeut);
+      rightEngNeut = 1;
     }
   }
+  else if (rightEngNeut == 1)
+  {
+    if (rightThrotPos > 620 || rightThrotPos < 410)
+      rightEngNeut = 0;
+  }
+
+  if (rightThrotPos > 512)
+    rightEng.write(rightEngPosF);
+  else
+    rightEng.write(rightEngPosR);
 
   int rightEngRead = rightEng.read();
   int rightthrot = map(rightEngRead, 180, 0, 0, 100);
   lcd.setCursor(14, 1);
-  lcd.print(rightthrot);
+  lcd.print(rightThrotPos);
   lcd.print("%");
   lcd.print(" ");
 }
